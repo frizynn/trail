@@ -1,0 +1,35 @@
+{
+  "name": "trail",
+  "version": "0.1.0",
+  "description": "Shared, append-only memory for your team and its AI coding agents. Plain Markdown in your repo, opens as an Obsidian vault, links to your tracker. No database, no daemon.",
+  "type": "module",
+  "bin": {
+    "trail": "./src/cli.ts"
+  },
+  "scripts": {
+    "build": "bun build ./src/cli.ts --compile --outfile dist/trail",
+    "trail": "bun run ./src/cli.ts"
+  },
+  "keywords": [
+    "ai-agents",
+    "memory",
+    "obsidian",
+    "markdown",
+    "claude-code",
+    "codex",
+    "cursor",
+    "mcp",
+    "team"
+  ],
+  "license": "MIT",
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "files": [
+    "src",
+    "templates",
+    "README.md",
+    "SPEC.md",
+    "LICENSE"
+  ]
+}
