@@ -1,6 +1,6 @@
-import { execFileSync } from "node:child_process";
 import { relative } from "node:path";
 
+import { blameAuthors, git, gitRoot } from "../core/git.ts";
 import { checkHot } from "../core/hot.ts";
 import { bold, dim, err, info, ok, warn } from "../core/ui.ts";
 import { requireVault } from "../core/vault.ts";
@@ -19,7 +19,7 @@ interface Violation {
  */
 export function check(): number {
   const { root } = requireVault();
-  const repoRoot = gitToplevel(root);
+  const repoRoot = gitRoot(root);
 
   if (!repoRoot) {
     warn("not a git repo; append-only diff check skipped (run inside git for full coverage)");
@@ -49,20 +49,6 @@ export function check(): number {
   }
   ok("check passed: append-only respected, _hot within budget");
   return 0;
-}
-
-/** Absolute git work-tree root containing the vault, or undefined if not in a repo. */
-function gitToplevel(cwd: string): string | undefined {
-  try {
-    const out = execFileSync("git", ["rev-parse", "--show-toplevel"], {
-      cwd,
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    }).trim();
-    return out || undefined;
-  } catch {
-    return undefined;
-  }
 }
 
 /**
@@ -118,21 +104,6 @@ function attribute(
   file: string,
   removed: { line: number; text: string }[],
 ): { line: number; text: string; author: string }[] {
-  const authors = new Map<number, string>();
-  const out = git(repoRoot, ["blame", "--line-porcelain", "HEAD", "--", file]);
-  let current = 0;
-  for (const line of out.split("\n")) {
-    const header = line.match(/^[0-9a-f]{40}\s+(\d+)\s+(\d+)/);
-    if (header && header[2]) current = Number.parseInt(header[2], 10);
-    else if (line.startsWith("author ")) authors.set(current, line.slice("author ".length).trim());
-  }
+  const authors = blameAuthors(repoRoot, file, "HEAD");
   return removed.map((r) => ({ ...r, author: authors.get(r.line) ?? "unknown" }));
-}
-
-function git(cwd: string, args: string[]): string {
-  try {
-    return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
-  } catch {
-    return "";
-  }
 }

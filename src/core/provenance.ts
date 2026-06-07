@@ -1,19 +1,21 @@
-import { execFileSync } from "node:child_process";
 import { userInfo } from "node:os";
+
+import { git } from "./git.ts";
 
 export type Agent = "cli" | "claude-code" | "codex" | "cursor";
 
+let cachedAuthor: string | undefined;
+let cachedAgent: Agent | undefined;
+
 /** The human responsible: `git config user.name`, falling back to $USER / OS username. */
 export function resolveAuthor(): string {
-  try {
-    const name = execFileSync("git", ["config", "user.name"], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    }).trim();
-    if (name) return name;
-  } catch {
-    // git missing or no user.name configured; fall through.
-  }
+  if (cachedAuthor !== undefined) return cachedAuthor;
+  return (cachedAuthor = computeAuthor());
+}
+
+function computeAuthor(): string {
+  const name = git(process.cwd(), ["config", "user.name"]).trim();
+  if (name) return name;
 
   const envUser = process.env["USER"] ?? process.env["USERNAME"];
   if (envUser) return envUser;
@@ -27,6 +29,11 @@ export function resolveAuthor(): string {
 
 /** The tool that physically wrote the file. TRAIL_AGENT overrides detection. */
 export function resolveAgent(): Agent {
+  if (cachedAgent !== undefined) return cachedAgent;
+  return (cachedAgent = computeAgent());
+}
+
+function computeAgent(): Agent {
   const explicit = process.env["TRAIL_AGENT"];
   if (explicit === "claude-code" || explicit === "codex" || explicit === "cursor" || explicit === "cli") {
     return explicit;

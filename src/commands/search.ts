@@ -50,12 +50,12 @@ function highlight(line: string, term: string): string {
   }
 }
 
-/** Walk the vault for `.md` files, skipping `.locks/` and `.obsidian/`. */
+/** Walk the vault for `.md` files, skipping `.obsidian/`. */
 function markdownFiles(root: string): string[] {
   const out: string[] = [];
   const walk = (dir: string): void => {
     for (const name of readdirSync(dir)) {
-      if (name === ".locks" || name === ".obsidian") continue;
+      if (name === ".obsidian") continue;
       const full = join(dir, name);
       if (statSync(full).isDirectory()) walk(full);
       else if (name.endsWith(".md")) out.push(full);

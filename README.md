@@ -23,7 +23,7 @@ An agent forgets everything the moment its session ends. Add a second agent, or 
 - **Opens as an Obsidian vault, no sync.** `.trail/` *is* a vault. Obsidian reads the same files the CLI writes, live, so you get backlinks and the graph view for nothing.
 - **Cross-vendor by design.** The same memory works with Claude Code, Codex, Cursor and Cline at once. No lock-in.
 - **Hangs off your tracker.** Link any note to a Jira, Linear or GitHub ticket. The tracker stays the source of truth for *state*; `trail` holds the *context*.
-- **Concurrency without a daemon.** One file per task, one active writer at a time, atomic writes and lazy locks. The same way `git` locks. Nothing runs in the background.
+- **Concurrency without a daemon.** One file per task, one active writer at a time, atomic writes. The same way `git` works. Nothing runs in the background.
 - **Provenance built in.** Every note records who wrote it (`author`) and which agent (`agent`).
 
 ## Structure
@@ -48,7 +48,7 @@ trail task "auth multi-tenant"        # start a task → WIP/auth-multi-tenant.m
 trail note auth-multi-tenant "RLS on every table, tenant_id from JWT"
 trail link auth-multi-tenant LIN-1234 # link to a Linear/Jira/GitHub ticket
 trail decide "use pgvector over a separate vector db"
-trail done auth-multi-tenant          # → DONE/, releases the claim
+trail done auth-multi-tenant          # → DONE/
 trail hot                             # print the live cache
 trail open                            # open .trail/ in Obsidian
 ```

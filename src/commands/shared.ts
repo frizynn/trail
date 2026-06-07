@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, renameSync } from "node:fs";
 import { join } from "node:path";
 
 import { appendAtomic, writeAtomic } from "../core/atomic.ts";
@@ -7,8 +7,9 @@ import type { Frontmatter } from "../core/frontmatter.ts";
 import { checkHot, regenerateHot } from "../core/hot.ts";
 import type { HotStatus } from "../core/hot.ts";
 import { now, resolveAgent, resolveAuthor, today } from "../core/provenance.ts";
-import { warn } from "../core/ui.ts";
-import { vaultPaths } from "../core/vault.ts";
+import { slugify } from "../core/slug.ts";
+import { dim, info, ok, warn } from "../core/ui.ts";
+import { requireVault, vaultPaths } from "../core/vault.ts";
 
 /** A command error whose message is shown to the user; the CLI exits non-zero. */
 export class TrailError extends Error {}
@@ -80,6 +81,93 @@ export function warnIfOverBudget(status: HotStatus): void {
       `${status.activeTasks} active tasks · _hot ${status.words} words (budget ${status.budget}). Close or pause some.`,
     );
   }
+}
+
+export interface ParsedFlags {
+  positionals: string[];
+  flags: Record<string, string | undefined>;
+}
+
+/** Split args into positionals and `--name value` flags drawn from `names`. */
+export function parseFlags(args: string[], names: string[]): ParsedFlags {
+  const positionals: string[] = [];
+  const flags: Record<string, string | undefined> = {};
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === undefined) continue;
+    const name = arg.startsWith("--") ? arg.slice(2) : undefined;
+    if (name && names.includes(name)) flags[name] = args[++i];
+    else positionals.push(arg);
+  }
+  return { positionals, flags };
+}
+
+/** What a note command contributes once its title has been turned into a slug. */
+export interface NotePlan {
+  /** Absolute path to write; refused if it already exists. */
+  file: string;
+  /** Human-friendly path for "already exists" / success output (e.g. `WIP/foo.md`). */
+  rel: string;
+  /** Full serialized note content. */
+  content: string;
+  /** Today's-log line for this creation. */
+  logText: string;
+  /** Success confirmation message. */
+  okMessage: string;
+}
+
+/**
+ * The shared create-note flow for task/decide/research: validate the title, derive a
+ * slug, require an initialized vault, refuse a duplicate, then write + log + refresh.
+ * Each command supplies its own template and messages via `plan`.
+ */
+export function createNote(
+  title: string,
+  usage: string,
+  plan: (slug: string, root: string) => NotePlan,
+): void {
+  if (!title) throw new TrailError(usage);
+
+  const slug = slugify(title);
+  if (!slug) throw new TrailError(`could not derive a slug from "${title}"`);
+
+  const { root } = requireVault();
+  const { file, rel, content, logText, okMessage } = plan(slug, root);
+
+  if (existsSync(file)) throw new TrailError(`already exists at ${rel}`);
+
+  writeAtomic(file, content);
+  appendLog(root, logText);
+  refreshHotAndWarn(root);
+
+  ok(okMessage);
+  info(dim(`  ${rel}`));
+}
+
+/** Move a WIP task to its terminal directory: timeline entry, status, move, log, refresh. */
+export function closeTask(opts: {
+  slug: string;
+  status: "done" | "paused";
+  dest: "done" | "paused";
+  timelineText: string;
+  logLabel: string;
+  okMessage: string;
+}): void {
+  const { root } = requireVault();
+  const paths = vaultPaths(root);
+  const src = join(paths.wip, `${opts.slug}.md`);
+  if (!existsSync(src)) throw new TrailError(`no active task '${opts.slug}' in WIP/`);
+
+  appendTimeline(src, opts.timelineText);
+  updateFrontmatter(src, (fm) => {
+    fm.status = opts.status;
+  });
+
+  renameSync(src, join(paths[opts.dest], `${opts.slug}.md`));
+  appendLog(root, opts.logLabel);
+  refreshHotAndWarn(root);
+
+  ok(opts.okMessage);
 }
 
 export { checkHot };

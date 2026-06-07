@@ -1,6 +1,7 @@
-import { execFileSync } from "node:child_process";
 import { existsSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+
+import { gitRoot } from "./git.ts";
 
 export interface Vault {
   /** Absolute path to the `.trail/` directory. */
@@ -9,7 +10,6 @@ export interface Vault {
 
 export const VAULT_DIRS = ["WIP", "DONE", "PAUSED", "Decisions", "Research", "Log"] as const;
 export const HOT_FILE = "_hot.md";
-export const LOCKS_DIR = ".locks";
 export const OBSIDIAN_DIR = ".obsidian";
 
 /**
@@ -26,8 +26,8 @@ export function resolveVaultRoot(cwd = process.cwd()): string {
   const existing = walkUpForTrail(cwd);
   if (existing) return existing;
 
-  const gitRoot = findGitRoot(cwd);
-  if (gitRoot) return join(gitRoot, ".trail");
+  const root = gitRoot(cwd);
+  if (root) return join(root, ".trail");
 
   return join(cwd, ".trail");
 }
@@ -49,7 +49,6 @@ export function vaultPaths(root: string) {
   return {
     root,
     hot: join(root, HOT_FILE),
-    locks: join(root, LOCKS_DIR),
     obsidian: join(root, OBSIDIAN_DIR),
     wip: join(root, "WIP"),
     done: join(root, "DONE"),
@@ -68,19 +67,6 @@ function walkUpForTrail(start: string): string | undefined {
     const parent = dirname(dir);
     if (parent === dir) return undefined;
     dir = parent;
-  }
-}
-
-function findGitRoot(cwd: string): string | undefined {
-  try {
-    const root = execFileSync("git", ["rev-parse", "--show-toplevel"], {
-      cwd,
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    }).trim();
-    return root || undefined;
-  } catch {
-    return undefined;
   }
 }
 

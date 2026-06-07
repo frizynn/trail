@@ -1,7 +1,7 @@
-import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { dirname, relative } from "node:path";
 
+import { blameAuthors } from "../core/git.ts";
 import { bold, cyan, dim, info } from "../core/ui.ts";
 import { requireVault } from "../core/vault.ts";
 
@@ -35,7 +35,7 @@ export function blame(args: string[]): void {
     return;
   }
 
-  const gitAuthors = useGit ? gitBlameAuthors(file) : undefined;
+  const gitAuthors = useGit ? blameAuthors(dirname(file), file) : undefined;
   for (const entry of entries) {
     const committer = gitAuthors?.get(entry.lineNo);
     const gitNote = committer ? `  ${dim(`[git: ${committer}]`)}` : "";
@@ -58,25 +58,4 @@ function parseTimeline(lines: string[]): TimelineLine[] {
     }
   });
   return entries;
-}
-
-/** Map 1-based line number → committing author, from `git blame --line-porcelain`. */
-function gitBlameAuthors(file: string): Map<number, string> {
-  const result = new Map<number, string>();
-  try {
-    const out = execFileSync("git", ["blame", "--line-porcelain", file], {
-      cwd: dirname(file),
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    });
-    let currentLine = 0;
-    for (const line of out.split("\n")) {
-      const header = line.match(/^[0-9a-f]{40}\s+\d+\s+(\d+)/);
-      if (header && header[1]) currentLine = Number.parseInt(header[1], 10);
-      else if (line.startsWith("author ")) result.set(currentLine, line.slice("author ".length).trim());
-    }
-  } catch {
-    // Not committed yet, or not a git repo: skip the git cross-reference silently.
-  }
-  return result;
 }

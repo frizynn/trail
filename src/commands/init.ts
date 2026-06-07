@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 import { writeAtomic } from "../core/atomic.ts";
-import { emptyHot, OBSIDIAN_FILES, obsidianGitignore } from "../core/templates.ts";
+import { emptyHot, obsidianGitignore, writeObsidianConfig } from "../core/templates.ts";
 import { bold, dim, info, ok } from "../core/ui.ts";
 import { resolveVaultRoot, vaultPaths, VAULT_DIRS } from "../core/vault.ts";
 
@@ -16,7 +16,7 @@ export function init(args: string[]): void {
   const repoRoot = dirname(root);
 
   scaffoldVault(root, paths);
-  writeObsidian(paths.obsidian);
+  writeObsidianConfig(paths.obsidian);
   writeVaultGitignore(root);
   const pointer = writePointers(repoRoot);
   if (withHook) writeHook(repoRoot);
@@ -37,19 +37,9 @@ function scaffoldVault(root: string, paths: ReturnType<typeof vaultPaths>): void
     mkdirSync(target, { recursive: true });
     keep(join(target, ".gitkeep"));
   }
-  mkdirSync(paths.locks, { recursive: true });
-  keep(join(paths.locks, ".gitkeep"));
 
   if (!existsSync(paths.hot)) {
     writeAtomic(paths.hot, emptyHot());
-  }
-}
-
-function writeObsidian(obsidianDir: string): void {
-  mkdirSync(obsidianDir, { recursive: true });
-  for (const [name, content] of Object.entries(OBSIDIAN_FILES)) {
-    const target = join(obsidianDir, name);
-    if (!existsSync(target)) writeFileSync(target, content);
   }
 }
 
