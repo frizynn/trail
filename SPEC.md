@@ -89,7 +89,7 @@ and append-not-overwrite. Agents should call `trail …`, not edit files blindly
 
 | Command | Effect |
 |---|---|
-| `trail init` | Scaffold `.trail/` plus a pretty `.obsidian/` config and `_hot.md`. |
+| `trail init [--with-hook]` | Scaffold `.trail/` and `_hot.md`, write the `AGENTS.md` pointer, generate a local `.obsidian/`. `--with-hook` adds the Claude Code `SessionStart` hook. |
 | `trail task <title> [--ticket ID] [--tags a,b]` | New `WIP/<slug>.md`, claim it, update `_hot.md` and today's log. |
 | `trail note <slug> <text>` | Atomic append to the task's `## Timeline`, stamped `HH:MM · author · agent`. |
 | `trail decide <title> [--ticket ID]` | New `Decisions/YYYY-MM-DD-<slug>.md`. |
@@ -107,11 +107,25 @@ and append-not-overwrite. Agents should call `trail …`, not edit files blindly
 
 Slugs are kebab-case, lowercase, no accents, 6 words max.
 
-## 7. `_hot.md`
+## 7. `_hot.md` and the budget
 
 A regenerated snapshot, never hand-edited as the authority: the active `WIP/` tasks (with
-their one-line summary and ticket), the most recent decisions, and the next steps. Kept
-under 400 words. The full truth of a task is its file in `WIP/`; `_hot.md` only links.
+their one-line summary and ticket), the most recent decisions, and the next steps. The full
+truth of a task is its file in `WIP/`; `_hot.md` only links.
+
+`trail` regenerates `_hot.md` on every write and keeps it small by construction, trimming to
+the most relevant entries and linking the rest. The budget is **400 words by default**
+(configurable). When even the trimmed snapshot is over budget, write commands print a
+non-blocking warning:
+
+```
+⚠ 13 active tasks · _hot 600 words (budget 400). Close or pause some.
+```
+
+It is a **warning, not an error**: `_hot.md` is derived, so its size never blocks a write. In
+practice an over-budget hot means too many tasks in flight, so the warning doubles as an
+overcommit signal. For a hard gate, `trail check` fails when the budget is exceeded, so you
+can enforce it in CI without slowing down local work.
 
 ## 8. Provenance and guardrails
 
@@ -131,9 +145,26 @@ to prevent that. It makes every change visible and attributable, and lets `trail
 block append-only violations at the pull request. Real enforcement comes from branch
 protection plus a required check, not from the tool guarding the disk.
 
+## 9. Context delivery
+
+Agents need the current context (`_hot.md`) when they start. `trail` delivers it in a
+cross-vendor way, never depending on a single tool:
+
+- **Pointer (default).** `trail init` writes a short block in `AGENTS.md` and `CLAUDE.md`:
+  the project memory lives in `.trail/`, run `trail hot` for current context, and never edit
+  `.trail/` by hand. Codex, Cursor and Claude Code all read these files.
+- **On demand.** Any agent can run `trail hot`, or call the MCP `get_hot_context` tool (v0.2).
+- **Auto-injection (opt-in, Claude Code).** `trail init --with-hook` writes a committed
+  `.claude/settings.json` with a `SessionStart` hook that runs `trail hot`, so the context is
+  injected automatically for every teammate. It is opt-in because it touches `.claude/`, and
+  Claude Code asks each user to approve a repo's hooks once, by design.
+
+The pointer and `trail hot` are the load-bearing, vendor-neutral path. The hook is a
+convenience on top, not a dependency.
+
 ## Roadmap
 
-- **v0.1, daily loop (now):** the commands above, Obsidian-ready output, atomic writes plus claims, and the `blame` / `check` guardrails.
+- **v0.1, daily loop (now):** the commands above, the `AGENTS.md` context pointer, atomic writes plus claims, and the `blame` / `check` guardrails.
 - **v0.2, agents:** an MCP server exposing the same commands as tools (`start_task`,
   `append_timeline`, `write_decision`, `get_hot_context`, `link_ticket`, `claim`/`release`).
 - **v0.3, tracker sync:** read ticket metadata from Jira/Linear/GitHub via their MCP/APIs
