@@ -11,9 +11,8 @@ bun.lockb
 # OS
 .DS_Store
 
-# Obsidian per-user workspace state (the vault config itself IS committed; this is just local UI state)
-.trail/.obsidian/workspace.json
-.trail/.obsidian/workspace-mobile.json
+# Obsidian config is generated locally by trail, never committed (Obsidian stays optional)
+.trail/.obsidian/
 
 # Trail runtime locks (never commit active claims)
 .trail/.locks/
