@@ -1,10 +1,10 @@
 <div align="center">
 
-# 🥾 trail
+<img src="./assets/banner.png" alt="trail" width="100%">
 
 **Shared, append-only memory for your team and its AI coding agents.**
 
-Plain Markdown in your repo · opens as an [Obsidian](https://obsidian.md) vault · links to Jira / Linear / GitHub
+Plain Markdown in your repo · opens as an Obsidian vault · links to Jira / Linear / GitHub
 No database. No daemon. No cloud.
 
 </div>
@@ -13,35 +13,31 @@ No database. No daemon. No cloud.
 
 ## Why
 
-A coding agent's memory dies when the session ends. Add a second agent — or a second teammate — and everyone starts from zero: re-deciding what was already decided, re-discovering the same workarounds, breaking conventions nobody wrote down.
+An agent forgets everything the moment its session ends. Add a second agent, or a new teammate, and they start from scratch. They re-decide things you already settled. They ask again how the tests run. They break a convention nobody bothered to write down.
 
-`trail` is the **operational memory of the team**: tasks, decisions, research and a daily log, written as Markdown that lives **inside your repo** and travels with `git`. Humans read and write it. Claude Code, Codex and Cursor read and write it. It is **not** a tracker — it hangs off the one you already use (Jira / Linear / GitHub) by linking each note to a ticket ID.
-
-```
-the trail you leave so the next teammate — human or agent — finds the path.
-```
+`trail` is the team's operational memory: tasks, decisions, research and a daily log, written as Markdown that lives in your repo and travels with `git`. Humans read and write it. So do Claude Code, Codex and Cursor. It isn't a tracker. It hangs off the one you already use (Jira, Linear, GitHub) by linking each note to a ticket ID.
 
 ## What makes it different
 
-- **Plain Markdown, in your repo.** Everything is a `.md` file under `.trail/`. Greppable, diffable, reviewed like code.
-- **Opens as an Obsidian vault — no sync.** `.trail/` *is* a vault. Obsidian reads the same files the CLI writes, live. Backlinks, graph view and tags for free.
+- **Plain Markdown, in your repo.** Everything is a `.md` file under `.trail/`, reviewed in a PR like any other code.
+- **Opens as an Obsidian vault, no sync.** `.trail/` *is* a vault. Obsidian reads the same files the CLI writes, live, so you get backlinks and the graph view for nothing.
 - **Cross-vendor by design.** The same memory works with Claude Code, Codex, Cursor and Cline at once. No lock-in.
-- **Hangs off your tracker.** Link any note to a Jira/Linear/GitHub ticket. Your tracker stays the source of truth for *state*; `trail` holds the *context*.
-- **Concurrency without a daemon.** One file per task, one active writer at a time, atomic writes, lazy TTL locks — the way `git` itself locks. Nothing runs in the background.
+- **Hangs off your tracker.** Link any note to a Jira, Linear or GitHub ticket. The tracker stays the source of truth for *state*; `trail` holds the *context*.
+- **Concurrency without a daemon.** One file per task, one active writer at a time, atomic writes and lazy locks. The same way `git` locks. Nothing runs in the background.
 - **Provenance built in.** Every note records who wrote it (`author`) and which agent (`agent`).
 
 ## Structure
 
 ```
 .trail/
-├── _hot.md          # live cache: what's active right now (always < 400 words)
-├── WIP/             # active tasks — one file per task, append-only timeline
+├── _hot.md          # live cache: what's active right now (under 400 words)
+├── WIP/             # active tasks, one file per task, append-only timeline
 ├── DONE/            # completed tasks
-├── PAUSED/          # blocked / parked tasks
-├── Decisions/       # lightweight ADRs — YYYY-MM-DD-slug.md
+├── PAUSED/          # blocked or parked tasks
+├── Decisions/       # lightweight ADRs: YYYY-MM-DD-slug.md
 ├── Research/        # investigations
-├── Log/             # daily log — YYYY-MM-DD.md
-└── .obsidian/       # pretty graph + folders, shared with the team
+├── Log/             # daily log: YYYY-MM-DD.md
+└── .obsidian/       # pretty graph and folders, shared with the team
 ```
 
 ## Quickstart
@@ -59,11 +55,11 @@ trail open                            # open .trail/ in Obsidian
 
 ## Design
 
-The full convention — folder layout, frontmatter schema, concurrency model and command reference — lives in [`SPEC.md`](./SPEC.md). It is deliberately small.
+The full convention lives in [`SPEC.md`](./SPEC.md): folder layout, frontmatter schema, concurrency model and command reference. It's deliberately small.
 
 ## Status
 
-Early. `v0.1` focuses on the daily loop (init · task · note · decide · research · log · done · link · hot). MCP server (so agents call the same commands as tools) and `git`-based team sync come next. See the roadmap in [`SPEC.md`](./SPEC.md#roadmap).
+Early. `v0.1` covers the daily loop (init · task · note · decide · research · log · done · link · hot · blame · check). Next up: an MCP server so agents call the same commands as tools, then `git`-based team sync. See the roadmap in [`SPEC.md`](./SPEC.md#roadmap).
 
 ## License
 
