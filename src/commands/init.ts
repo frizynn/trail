@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 import { writeAtomic } from "../core/atomic.ts";
-import { emptyHot, obsidianGitignore, writeObsidianConfig } from "../core/templates.ts";
+import { emptyHot, obsidianGitignore } from "../core/templates.ts";
 import { bold, dim, info, ok } from "../core/ui.ts";
 import { resolveVaultRoot, vaultPaths, VAULT_DIRS } from "../core/vault.ts";
 
@@ -16,7 +16,6 @@ export function init(args: string[]): void {
   const repoRoot = dirname(root);
 
   scaffoldVault(root, paths);
-  writeObsidianConfig(paths.obsidian);
   writeVaultGitignore(root);
   const pointer = writePointers(repoRoot);
   if (withHook) writeHook(repoRoot);

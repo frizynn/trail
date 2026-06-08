@@ -1,13 +1,11 @@
 import { spawn } from "node:child_process";
 
-import { writeObsidianConfig } from "../core/templates.ts";
 import { dim, info, ok } from "../core/ui.ts";
-import { requireVault, vaultPaths } from "../core/vault.ts";
+import { requireVault } from "../core/vault.ts";
 
-/** Open `.trail/` as an Obsidian vault, materializing `.obsidian/` if it is missing. */
+/** Open `.trail/` in Obsidian. Obsidian creates its own `.obsidian/` on first open. */
 export function open(): void {
   const { root } = requireVault();
-  writeObsidianConfig(vaultPaths(root).obsidian);
 
   const uri = `obsidian://open?path=${encodeURIComponent(root)}`;
   const opener = process.platform === "darwin" ? "open" : process.platform === "win32" ? "cmd" : "xdg-open";

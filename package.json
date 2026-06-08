@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "bun build ./src/cli.ts --compile --outfile dist/trail",
+    "setup": "bash ./install.sh",
     "trail": "bun run ./src/cli.ts"
   },
   "keywords": [
@@ -27,7 +28,7 @@
   },
   "files": [
     "src",
-    "templates",
+    "skills",
     "README.md",
     "SPEC.md",
     "LICENSE"

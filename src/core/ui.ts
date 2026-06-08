@@ -31,8 +31,3 @@ export function bold(text: string): string {
 export function cyan(text: string): string {
   return paint("36", text);
 }
-
-/** Highlight a substring (yellow background) for search matches. */
-export function hi(text: string): string {
-  return paint("43;30", text);
-}

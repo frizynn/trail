@@ -10,7 +10,6 @@ export interface Vault {
 
 export const VAULT_DIRS = ["WIP", "DONE", "PAUSED", "Decisions", "Research", "Log"] as const;
 export const HOT_FILE = "_hot.md";
-export const OBSIDIAN_DIR = ".obsidian";
 
 /**
  * Resolve the `.trail/` directory:
@@ -49,7 +48,6 @@ export function vaultPaths(root: string) {
   return {
     root,
     hot: join(root, HOT_FILE),
-    obsidian: join(root, OBSIDIAN_DIR),
     wip: join(root, "WIP"),
     done: join(root, "DONE"),
     paused: join(root, "PAUSED"),

@@ -6,13 +6,12 @@ import { done } from "./commands/done.ts";
 import { hot } from "./commands/hot.ts";
 import { init } from "./commands/init.ts";
 import { link } from "./commands/link.ts";
-import { list } from "./commands/list.ts";
 import { log } from "./commands/log.ts";
+import { migrate } from "./commands/migrate.ts";
 import { note } from "./commands/note.ts";
 import { open } from "./commands/open.ts";
 import { pause } from "./commands/pause.ts";
 import { research } from "./commands/research.ts";
-import { search } from "./commands/search.ts";
 import { TrailError } from "./commands/shared.ts";
 import { task } from "./commands/task.ts";
 import { bold, cyan, dim, err, info } from "./core/ui.ts";
@@ -30,7 +29,8 @@ interface Command {
 
 /** The single source of truth: dispatch and grouped `--help` both derive from this. */
 const COMMANDS: Command[] = [
-  { name: "init", group: "Setup", usage: "init [--with-hook]", summary: "scaffold .trail/, write the AGENTS.md pointer, generate .obsidian/", run: init },
+  { name: "init", group: "Setup", usage: "init [--with-hook]", summary: "scaffold .trail/ and write the AGENTS.md/CLAUDE.md pointer", run: init },
+  { name: "migrate", group: "Setup", usage: "migrate [--from PATH] [--author NAME] [--dry-run] [--force]", summary: "import an obsidian-memory vault into .trail/ (faithful, non-destructive)", run: migrate },
   { name: "task", group: "Capture", usage: "task <title> [--ticket ID] [--tags a,b]", summary: "start a task, refresh _hot", run: task },
   { name: "note", group: "Capture", usage: "note <slug> <text>", summary: "append a stamped line to a task's timeline", run: note },
   { name: "decide", group: "Capture", usage: "decide <title> [--ticket ID]", summary: "record a decision (ADR-style)", run: decide },
@@ -39,9 +39,7 @@ const COMMANDS: Command[] = [
   { name: "link", group: "Capture", usage: "link <slug> <ticket>", summary: "set the ticket on a note", run: link },
   { name: "done", group: "Lifecycle", usage: "done <slug>", summary: "mark done, move to DONE/", run: done },
   { name: "pause", group: "Lifecycle", usage: "pause <slug> <reason>", summary: "park a task, move to PAUSED/", run: pause },
-  { name: "list", group: "Read", usage: "list", summary: "list active tasks", run: list },
   { name: "hot", group: "Read", usage: "hot", summary: "print _hot.md", run: hot },
-  { name: "search", group: "Read", usage: "search <term>", summary: "search across the vault", run: search },
   { name: "blame", group: "Read", usage: "blame <slug> [--git]", summary: "show timeline provenance per entry", run: blame },
   { name: "check", group: "Guardrails", usage: "check", summary: "enforce append-only + budget (exit !=0 on violations, for CI)", run: check },
   { name: "open", group: "Obsidian", usage: "open", summary: "open .trail/ in Obsidian", run: open },
